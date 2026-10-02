@@ -1,5 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const customerRoutes = require("./routes/customerRoutes");
+const serviceRoutes = require("./routes/serviceRoutes");
+const promotionRoutes = require("./routes/promotionRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -10,6 +14,14 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Laundry Republic API is running" });
 });
 
-// Business API routes will be mounted here as they are implemented.
+app.use("/api/customers", customerRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/promotions", promotionRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+app.use(errorHandler);
 
 module.exports = app;
