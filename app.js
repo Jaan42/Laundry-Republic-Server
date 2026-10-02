@@ -3,6 +3,7 @@ const cors = require("cors");
 const customerRoutes = require("./routes/customerRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const promotionRoutes = require("./routes/promotionRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
 app.use("/api/customers", customerRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/promotions", promotionRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
