@@ -5,10 +5,12 @@ const {
   createPromotion,
   updatePromotion,
   deletePromotion,
+  validatePromotionCode,
 } = require("../controllers/promotionController");
 
 const router = express.Router();
 
+router.post("/validate", validatePromotionCode);
 router.route("/").get(getPromotions).post(createPromotion);
 router
   .route("/:id")

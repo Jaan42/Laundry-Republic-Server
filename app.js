@@ -4,12 +4,14 @@ const customerRoutes = require("./routes/customerRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const promotionRoutes = require("./routes/promotionRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const requestLogger = require("./middleware/requestLogger");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(requestLogger);
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Laundry Republic API is running" });

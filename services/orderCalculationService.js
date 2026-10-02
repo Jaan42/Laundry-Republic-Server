@@ -111,7 +111,7 @@ const loadAndPriceItems = async (items, session) => {
   });
 };
 
-const validatePromotion = async ({
+const checkPromotionEligibility = async ({
   promotionCode,
   baseTotal,
   orderDate,
@@ -122,7 +122,11 @@ const validatePromotion = async ({
     promotionCode === null ||
     promotionCode === ""
   ) {
-    return null;
+    return {
+      valid: false,
+      promotion: null,
+      message: "Promotion code is required",
+    };
   }
 
   if (typeof promotionCode !== "string") {
@@ -139,28 +143,62 @@ const validatePromotion = async ({
   const promotion = await applySession(promotionQuery, session);
 
   if (!promotion) {
-    throw createServiceError(400, "Promotion code not found");
+    return {
+      valid: false,
+      promotion: null,
+      message: "Promotion code not found",
+    };
   }
 
   if (!promotion.isActive) {
-    throw createServiceError(400, "Promotion is inactive");
+    return {
+      valid: false,
+      promotion,
+      message: "Promotion is inactive",
+    };
   }
 
   if (orderDate < promotion.startDate || orderDate > promotion.endDate) {
-    throw createServiceError(
-      400,
-      "Promotion is not valid for the order date",
-    );
+    return {
+      valid: false,
+      promotion,
+      message: "Promotion is not valid for the order date",
+    };
   }
 
   if (baseTotal < promotion.minimumAmount) {
-    throw createServiceError(
-      400,
-      `Promotion requires a minimum amount of ${promotion.minimumAmount}`,
-    );
+    return {
+      valid: false,
+      promotion,
+      message: `Promotion requires a minimum amount of ${promotion.minimumAmount}`,
+    };
   }
 
-  return promotion;
+  return {
+    valid: true,
+    promotion,
+    message: "Promotion applied successfully",
+  };
+};
+
+const validatePromotion = async (options) => {
+  const { promotionCode } = options;
+
+  if (
+    promotionCode === undefined ||
+    promotionCode === null ||
+    promotionCode === ""
+  ) {
+    return null;
+  }
+
+  const result = await checkPromotionEligibility(options);
+
+  if (!result.valid) {
+    throw createServiceError(400, result.message);
+  }
+
+  return result.promotion;
 };
 
 const calculateOrder = async ({
@@ -303,4 +341,6 @@ module.exports = {
   toCalculationResponse,
   calculateStoredTotals,
   getDueStatus,
+  checkPromotionEligibility,
+  roundCurrency,
 };

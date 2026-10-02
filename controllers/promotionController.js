@@ -4,6 +4,9 @@ const {
   ensureValidObjectId,
   ensureObjectBody,
 } = require("./controllerHelpers");
+const {
+  checkPromotionEligibility,
+} = require("../services/orderCalculationService");
 
 const getPromotions = async (req, res, next) => {
   try {
@@ -77,10 +80,48 @@ const deletePromotion = async (req, res, next) => {
   }
 };
 
+const validatePromotionCode = async (req, res, next) => {
+  try {
+    ensureObjectBody(req.body);
+
+    const { code, subtotal } = req.body;
+
+    if (typeof code !== "string" || !code.trim()) {
+      throw createHttpError(400, "code is required");
+    }
+
+    if (
+      typeof subtotal !== "number" ||
+      !Number.isFinite(subtotal) ||
+      subtotal < 0
+    ) {
+      throw createHttpError(400, "subtotal must be a non-negative number");
+    }
+
+    const result = await checkPromotionEligibility({
+      promotionCode: code,
+      baseTotal: subtotal,
+      orderDate: new Date(),
+    });
+
+    res.status(200).json({
+      valid: result.valid,
+      code: result.promotion?.code || code.trim().toUpperCase(),
+      discountPercentage: result.valid
+        ? result.promotion.discountPercentage
+        : 0,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPromotions,
   getPromotionById,
   createPromotion,
   updatePromotion,
   deletePromotion,
+  validatePromotionCode,
 };
